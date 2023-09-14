@@ -10,6 +10,7 @@ This is the API server project for the orphanage account interface which is resp
 
   - Run `git clone https://github.com/go-charity/orphanage-account-server.git`
   - Run `npm i -f`
+  - Run `npm run build`
   - Run `npm run dev`
 
 - **Run the project using Docker**:
