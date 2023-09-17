@@ -7,34 +7,15 @@ const userDetails = new Schema({
     unique: true,
   },
   fullname: {
-    // required: true,
     type: String,
   },
   phone_number: {
-    // required: true,
     type: String,
   },
-  location: {
-    lat: {
-      type: Number,
-      // required: true,
-    },
-    lng: {
-      type: Number,
-      // required: true,
-    },
-  },
-  social_media_handles: {
-    type: [
-      {
-        type: { type: String, required: true },
-        link: { type: String, required: true },
-      },
-    ],
-  },
   image: String,
+  website: String,
 });
 
-const UserDetailsModel = model("UserDetail", userDetails);
+const UserDetailsModel = model("User_Detail", userDetails);
 
-export default models.UserDetails || UserDetailsModel;
+export default UserDetailsModel;
