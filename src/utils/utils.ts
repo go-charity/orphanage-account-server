@@ -2,6 +2,10 @@ import axios, { AxiosResponse } from "axios";
 import { NextFunction, Request, Response } from "express";
 import { SocialMediaHandleType } from "../types";
 import inspector from "schema-inspector";
+import DataURIParser from "datauri/parser";
+import path from "path";
+import cloudinary from "../models/cloudinary-config";
+import { UploadApiOptions } from "cloudinary";
 
 export const apiKey = "09773711f3cd4a50803d85bca6a11ccc";
 
@@ -10,13 +14,17 @@ export class UserDetailsClass {
     public user_id?: string,
     public fullname?: string,
     public phone_number?: string,
-    public location?: { lat: number; lng: number },
-    public social_media_handles?: { type: string; link: string }[],
-    public website?: string,
-    public image?: string
+    public website?: string
   ) {}
 }
 
+export class UserLocationClass {
+  constructor(public lat: number, public lng: number) {}
+}
+
+export class UserSocialMediaHandlesClass {
+  constructor(public type: string, public link: string) {}
+}
 /**
  * Converts a utf-8 string to a base64 string
  * @param value utf-8 string
@@ -46,9 +54,9 @@ export const validateApiKey = (
   next: NextFunction
 ) => {
   if (!Object.keys(req.headers).includes("api-key"))
-    return res.status(401).json("Invalid api key");
+    return res.status(401).send("Invalid api key");
   if (convertFrombase64(req.headers["api-key"] as any) !== apiKey)
-    return res.status(401).json("Invalid api key");
+    return res.status(401).send("Invalid api key");
 
   next();
 };
@@ -128,6 +136,11 @@ export const validateApiKey = (
 //   return options?.mutate ? obj : newObj;
 // };
 
+/**
+ * A function for validating the data passed to the update and edit social media handles endpoint
+ * @param socialMediaHandles A list of object matching the following schema - {type: "", link: ""}
+ * @returns an object containing result of the parameter passed has the valid schema, and the error/success message
+ */
 export const validateSocialMediaHandlesList = (
   socialMediaHandles: SocialMediaHandleType[]
 ): { valid: boolean; format: Function } => {
@@ -138,6 +151,29 @@ export const validateSocialMediaHandlesList = (
       format: () =>
         `Expected the parameter passed to the 'socialMediaHandles' parameter to ba an array, but got a '${typeof socialMediaHandles}' instead`,
     };
+
+  const typesSet = new Set();
+  const duplicateKeys: string[] = [];
+  // Search for duplicate type properties in the social media handles list
+  for (const handle of socialMediaHandles) {
+    if (typesSet.has(handle.type)) {
+      // TODO: append to duplicateKeys
+      duplicateKeys.push(handle.type);
+    } else {
+      typesSet.add(handle.type);
+    }
+  }
+  // If the social media handles list has duplicate type properties
+  if (duplicateKeys.length > 0) {
+    // return invalid schema
+    return {
+      valid: false,
+      format: () =>
+        `The 'type' property is not unique, duplicates are ${duplicateKeys
+          .map((type) => `'${type}'`)
+          .join(", ")}`,
+    };
+  }
 
   const schema = {
     type: "array",
@@ -153,6 +189,80 @@ export const validateSocialMediaHandlesList = (
   const result = inspector.validate(schema, socialMediaHandles);
 
   return result;
+};
+
+/**
+ * A function for validating the data passed to the update location endpoint
+ * @param socialMediaHandles An object matching the following schema - {lat: number, lng: number}
+ * @returns an object containing result of the parameter passed has the valid schema, and the error/success message
+ */
+export const validateLocationObject = (
+  location: UserLocationClass
+): { valid: boolean; format: Function } => {
+  // If the value passed into the socialMediaHandles paremeter is not a valid object
+  if (typeof location !== "object")
+    return {
+      valid: false,
+      format: () =>
+        `Expected the parameter passed to the 'location' parameter to ba a object, but got a '${typeof location}' instead`,
+    };
+  if (Array.isArray(location))
+    return {
+      valid: false,
+      format: () =>
+        `Expected the parameter passed to the 'location' parameter to ba a object, but got an 'array' instead`,
+    };
+
+  const schema = {
+    type: "object",
+    properties: {
+      lat: {
+        type: "number",
+      },
+      lng: {
+        type: "number",
+      },
+    },
+  };
+
+  const result = inspector.validate(schema, location);
+
+  return result;
+};
+
+/**
+ * Converts a string to an object
+ * @example parseStringToObj("name=Prince, age=17, stack=Js") --> {name: "Prince", age: "17", stack: "Js"}
+ * @example parseStringToObj("name+Prince, age+17, stack+Js", "+") --> {name: "Prince", age: "17", stack: "Js"}
+ * @example parseStringToObj("name+Prince;age+17;stack+Js", "+", ";") --> {name: "Prince", age: "17", stack: "Js"}
+ * @example parseStringToObj("name=Prince;age=17;stack=Js", undefined, ";") --> {name: "Prince", age: "17", stack: "Js"}
+ * @param str The string to be converted to an object
+ * @param keyValueSeperator The seperator between a key and value pair
+ * @param delimiter The seperator between multiple key-value pairs
+ * @returns A string
+ */
+export const parseStringToObj = (
+  str: string,
+  keyValueSeperator?: string,
+  delimiter?: string
+) => {
+  // Validate the 'str' parameter type
+  if (typeof str !== "string")
+    throw new TypeError(
+      `Expected the value passed into the 'str' parameter to be a string, instead got a '${typeof str}'`
+    );
+
+  let returnValue: Record<string, string> = {};
+
+  const strToArr = str.split(delimiter || ", ");
+  for (const keyValue of strToArr) {
+    const key = keyValue.split(keyValueSeperator || "=")[0];
+    const value = keyValue.split(keyValueSeperator || "=")[1];
+
+    returnValue[key] = value;
+  }
+
+  return returnValue;
 };
 
 /**
@@ -193,16 +303,17 @@ export const parseObjToString = (
 
 /**
  * Validate if a request comes with a valid access token
+ * @example validateToken(request, response, next)
  * @param req The express request object
  * @param res The express response object
  * @param next The express next function
- * @returns void
+ * @returns an object containing response code and message
  */
 export const validateToken = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<{ code: number; message: string }> => {
   let response: AxiosResponse<any, any>;
   try {
     response = await axios.post(
@@ -225,8 +336,10 @@ export const validateToken = async (
     );
 
     // Return unauthorized if the response status code is neither 200 nor 201
-    if (response.status !== 200 && response.status !== 201)
-      return res.status(401).json("Unauthorized");
+    if (response.status !== 200 && response.status !== 201) {
+      res.status(401).json("Unauthorized");
+      return { code: 401, message: `unauthorized from endpoint` };
+    }
 
     // Set the user ID and user role in th request header
     req.headers.user_ID = response.data.user_ID;
@@ -254,14 +367,17 @@ export const validateToken = async (
     response.data.tokens?.refresh_token &&
       res.setHeader("Refresh-token", response.data.tokens.refresh_token);
 
-    return next();
-  } catch (e) {
+    next();
+    return { code: 200, message: "authorized" };
+  } catch (e: any) {
     console.log("ERROR ", e);
     // TODO:
-    return res.status(401).json("Unauthorized");
+    res.status(401).json("Unauthorized");
+    return { code: 401, message: `unauthorized from error, ${e.message}` };
   }
   // TODO:
-  return res.status(401).json("Unauthorized");
+  res.status(401).json("Unauthorized");
+  return { code: 401, message: `unauthorized from error` };
 };
 
 /**
@@ -274,4 +390,30 @@ export const waitFor = (seconds: number): Promise<void> => {
     setTimeout(resolve, 1000 * seconds)
   );
   return promise;
+};
+
+/**
+ * Uploads a file to cloudinary object storage
+ * @param file The file to be uploaded, typically a multer object
+ * @param options The options configuration containing the folder, resource_type, etc...
+ * @returns object
+ */
+export const uploadFileToCloudinary = async (
+  file: Express.Multer.File,
+  options?: UploadApiOptions
+) => {
+  const parser = new DataURIParser();
+  const base64File = parser.format(
+    path.extname(file.originalname).toString(),
+    file.buffer
+  );
+
+  if (base64File && base64File.content) {
+    return await cloudinary.uploader.upload(base64File.content, {
+      resource_type: "image",
+      ...options,
+    });
+  } else {
+    throw new Error("Couldn't upload file to object storage");
+  }
 };

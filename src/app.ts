@@ -5,7 +5,7 @@ import cors from "cors";
 import { validateApiKey, validateToken } from "./utils/utils";
 import connect from "./models/db-config";
 import getOrphanageDetailsRouter from "./routes/get-orphanage-details";
-import editOrphanageDetailsRouter from "./routes/edit-orphanage-details";
+import editOrphanageRouter from "./routes/edit-orphanage";
 
 config();
 connect();
@@ -35,7 +35,7 @@ app.use(validateApiKey);
 app.use(validateToken);
 
 app.use("/v1/", getOrphanageDetailsRouter);
-app.use("/v1/edit", editOrphanageDetailsRouter);
+app.use("/v1/edit", editOrphanageRouter);
 
 // Error handler middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
