@@ -1,18 +1,31 @@
-name: "CI to main branch"
+name: "Pull request to main branch CI"
 on:
   pull_request:
     branches:
       - main
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     container: node:gallium
+    env:
+      MONGODB_PASSWORD: Pa55w0rd
+      MONGODB_USERNAME: onukwilip
+      MONGODB_DB: orphanage-account
+      NODE_ENV: test
+      PORT: 6000
+      API_DOMAIN: localhost
+      MONGODB_LOCAL_HOST: localhost:27017
     steps:
+      - name: Setup mongodb instance
+        uses: supercharge/mongodb-github-action@1.10.0
+        with:
+          mongodb-version: 4.2
+          mongodb-port: 27017
+          mongodb-username: onukwilip
+          mongodb-password: Pa55w0rd
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install dependencies
-        run: "npm install -f"
-      - name: Build
-        run: "npm run build"
+        run: "npm ci"
       - name: Test
         run: npm run coverage
