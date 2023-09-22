@@ -12,7 +12,8 @@
     "build": "tsc --project ./tsconfig.build.json",
     "test": "jest",
     "coverage": "jest --coverage",
-    "dev": "nodemon ./dev/index.js"
+    "dev": "nodemon ./dev/index.js",
+    "start": "node ./dev/index.js"
   },
   "keywords": [
     "GOCharity",
