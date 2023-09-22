@@ -21,12 +21,5 @@ const UserSocialMediaHandlesModel = model(
   userSocialMediaHandles
 );
 
-//   { "social_media_handles.type": 1 },
-//   { unique: true }
-// );
-UserSocialMediaHandlesModel.collection.createIndex(
-  { "social_media_handles.type": 1 },
-  { unique: true }
-);
 
 export default UserSocialMediaHandlesModel;
