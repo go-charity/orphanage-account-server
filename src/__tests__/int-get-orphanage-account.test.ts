@@ -23,6 +23,7 @@ const authData = {
   user_ID: "650106e8961c0cbcc4d2f01f",
   user_role: "orphanage",
 };
+const idParam = convertTobase64(authData.user_ID);
 let access_token: string;
 const dummyUserDetails = {
   ...new UserDetailsClass(
@@ -71,13 +72,15 @@ afterAll(async () => {
 
 describe("Test cases responsible for tesitng the edit account functionalty", () => {
   test("Should return 401 error if no API key is passed", async () => {
-    const res = await request(app).get("/v1/");
+    const res = await request(app).get(`/v1/${idParam}`);
 
     expect(res.statusCode).toBe(401);
     expect(res.text).toMatch(/invalid.*api.*key/i);
   });
   test("Should return 401 error if invalid API key is passed", async () => {
-    const res = await request(app).get("/v1/").set("Api-key", "nbhikm");
+    const res = await request(app)
+      .get(`/v1/${idParam}`)
+      .set("Api-key", "nbhikm");
 
     expect(res.statusCode).toBe(401);
     expect(res.text).toMatch(/invalid.*api.*key/i);
@@ -88,7 +91,9 @@ describe("Test cases responsible for tesitng the edit account functionalty", () 
       data: "Unauthorized",
     });
 
-    const res = await request(app).get("/v1/").set("Api-key", testApiKey);
+    const res = await request(app)
+      .get(`/v1/${idParam}`)
+      .set("Api-key", testApiKey);
 
     expect(res.statusCode).toBe(401);
     expect(res.text).toMatch(/unauthorized/i);
@@ -100,7 +105,7 @@ describe("Test cases responsible for tesitng the edit account functionalty", () 
     });
 
     const res = await request(app)
-      .get("/v1/")
+      .get(`/v1/${idParam}`)
       .set("Api-key", testApiKey)
       .set("Authorization", "abc");
 
@@ -114,7 +119,7 @@ describe("Test cases responsible for tesitng the edit account functionalty", () 
     });
 
     const res = await request(app)
-      .get("/v1/")
+      .get(`/v1/${idParam}`)
       .set("Api-key", testApiKey)
       .set("Authorization", "Bearer abc");
 
@@ -137,7 +142,7 @@ describe("Test cases responsible for tesitng the edit account functionalty", () 
     });
 
     const res = await request(app)
-      .get("/v1/")
+      .get(`/v1/${idParam}`)
       .set("Api-key", testApiKey)
       .set("Authorization", `Bearer ${access_token}`);
 
@@ -173,7 +178,7 @@ describe("Test cases responsible for tesitng the edit account functionalty", () 
     });
 
     const res = await request(app)
-      .get("/v1/")
+      .get(`/v1/${idParam}`)
       .set("Api-key", testApiKey)
       .set("Authorization", `Bearer ${access_token}`);
 

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { UserDetailsClass } from "../utils/utils";
+import { UserDetailsClass, convertFrombase64 } from "../utils/utils";
 import UserDetails from "../models/UserDetails";
 import { UserDetailsType, UserType } from "../types";
 import UserSocialMediaHandlesModel from "../models/UserSocialMediaHandles";
@@ -10,7 +10,8 @@ export const getOrphanageDetails = async (
   res: Response
 ) => {
   try {
-    const userID = req.headers.user_ID;
+    // const userID = req.headers.user_ID;
+    const userID = convertFrombase64(req.params.id);
     let user: UserType | Record<string, any> = {};
     // Get user details from the database
     const userDetails = await UserDetails.findOne({
@@ -54,6 +55,15 @@ export const getOrphanageDetails = async (
     // If the user social media handles were fetched successfully
     if (userLocation) {
       user.location = { ...(userLocation as any)?.location?._doc };
+    }
+
+    // Check if the user id passed to the id parameter is same as that in the access token
+    if (userID === req.headers.user_ID) {
+      // Indicate that the user who sent the request is the same user who is logged in
+      res.setHeader("Is-user", "true");
+    } else {
+      // Indicate that the user who sent the request is NOT the same user who is logged in
+      res.setHeader("Is-user", "false");
     }
 
     // Delete the field id

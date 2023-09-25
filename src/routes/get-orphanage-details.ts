@@ -3,6 +3,6 @@ import { getOrphanageDetails } from "../controllers/get-orphanage-details";
 
 const getOrphanageDetailsRouter = Router();
 
-getOrphanageDetailsRouter.get("/", getOrphanageDetails);
+getOrphanageDetailsRouter.get("/:id", getOrphanageDetails);
 
 export default getOrphanageDetailsRouter;

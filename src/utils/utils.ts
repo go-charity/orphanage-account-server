@@ -350,14 +350,14 @@ export const validateToken = async (
       res.cookie("access_token", response.data.tokens.access_token, {
         path: "/",
         domain: process.env.API_DOMAIN,
-        httpOnly: true,
+        httpOnly: false,
         secure: true,
       });
     response.data.tokens?.refresh_token &&
       res.cookie("refresh_token", response.data.tokens.refresh_token, {
         path: "/",
         domain: process.env.API_DOMAIN,
-        httpOnly: true,
+        httpOnly: false,
         secure: true,
       });
 
