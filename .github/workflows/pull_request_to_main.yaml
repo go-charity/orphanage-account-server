@@ -71,5 +71,4 @@ jobs:
           name: build
       - name: Display build content
         run: |
-          cd dev
           ls -l -a
