@@ -6,7 +6,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: node:gallium
     env:
       MONGODB_PASSWORD: Pa55w0rd
       MONGODB_USERNAME: onukwilip
@@ -33,6 +32,11 @@ jobs:
       #     mongodb-password: Pa55w0rd
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-node-modules-dep-${{hashFiles('**/package-lock.json')}}
       - name: Install dependencies
         run: "npm ci"
       # - name: Test
