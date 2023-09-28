@@ -3,17 +3,17 @@ on:
   pull_request:
     branches:
       - main
+env:
+  MONGODB_PASSWORD: Pa55w0rd
+  MONGODB_USERNAME: onukwilip
+  MONGODB_DB: orphanage-account
+  NODE_ENV: test
+  PORT: 6000
+  API_DOMAIN: localhost
+  MONGODB_LOCAL_HOST: localhost:27017
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      MONGODB_PASSWORD: Pa55w0rd
-      MONGODB_USERNAME: onukwilip
-      MONGODB_DB: orphanage-account
-      NODE_ENV: test
-      PORT: 6000
-      API_DOMAIN: localhost
-      MONGODB_LOCAL_HOST: localhost:27017
     services:
       mongo:
         image: mongo
@@ -23,13 +23,6 @@ jobs:
           MONGO_INITDB_ROOT_USERNAME: onukwilip
           MONGO_INITDB_ROOT_PASSWORD: Pa55w0rd
     steps:
-      # - name: Setup mongodb instance
-      #   uses: supercharge/mongodb-github-action@1.10.0
-      #   with:
-      #     mongodb-version: 4.2
-      #     mongodb-port: 27017
-      #     mongodb-username: onukwilip
-      #     mongodb-password: Pa55w0rd
       - name: Checkout
         uses: actions/checkout@v3
       - name: Cache dependencies
@@ -39,9 +32,44 @@ jobs:
           key: npm-node-modules-dep-${{hashFiles('**/package-lock.json')}}
       - name: Install dependencies
         run: "npm ci"
-      # - name: Test
-      #   run: npm run coverage
+      - name: Test
+        run: npm run coverage
+      - name: Upload coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: coverage
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-node-modules-dep-${{hashFiles('**/package-lock.json')}}
+      - name: Install dependencies
+        run: npm ci
       - name: Build
         run: npm run build
-      - name: Start
-        run: npm start
+      - name: Upload build
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: dev
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: build
+      - name: Display build content
+        run: |
+          cd dev
+          ls -l -a
