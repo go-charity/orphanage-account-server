@@ -15,14 +15,22 @@ jobs:
       PORT: 6000
       API_DOMAIN: localhost
       MONGODB_LOCAL_HOST: localhost:27017
+    services:
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: onukwilip
+          MONGO_INITDB_ROOT_PASSWORD: Pa55w0rd
     steps:
-      - name: Setup mongodb instance
-        uses: supercharge/mongodb-github-action@1.10.0
-        with:
-          mongodb-version: 4.2
-          mongodb-port: 27017
-          mongodb-username: onukwilip
-          mongodb-password: Pa55w0rd
+      # - name: Setup mongodb instance
+      #   uses: supercharge/mongodb-github-action@1.10.0
+      #   with:
+      #     mongodb-version: 4.2
+      #     mongodb-port: 27017
+      #     mongodb-username: onukwilip
+      #     mongodb-password: Pa55w0rd
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install dependencies
