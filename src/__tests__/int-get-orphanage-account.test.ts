@@ -15,6 +15,7 @@ import axios from "axios";
 import UserSocialMediaHandlesModel from "../models/UserSocialMediaHandles";
 import UserLocationModel from "../models/UserLocation";
 import { UserType } from "../types";
+import mongoose from "mongoose";
 
 jest.mock("axios");
 
@@ -68,6 +69,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await deleteAllCollectionData();
+  mongoose.disconnect();
 });
 
 describe("Test cases responsible for tesitng the edit account functionalty", () => {

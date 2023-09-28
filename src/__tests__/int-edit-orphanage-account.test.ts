@@ -16,6 +16,7 @@ import UserLocationModel from "../models/UserLocation";
 import * as utils from "../utils/utils";
 import path from "path";
 import { readFile } from "fs/promises";
+import mongoose from "mongoose";
 
 jest.mock("axios");
 const uploadFileToCloudinaryMockReturnValue = {
@@ -71,6 +72,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await deleteAllCollectionData();
+  mongoose.disconnect();
 });
 
 describe("Test cases responsible for testing the '/v1/edit' endpoint", () => {
