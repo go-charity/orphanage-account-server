@@ -4,6 +4,7 @@ import {
   UserSocialMediaHandlesClass,
   parseObjToString,
   parseStringToObj,
+  validateAboutDescriptionObject,
   validateLocationObject,
   validateSocialMediaHandlesList,
   validateToken,
@@ -219,6 +220,51 @@ describe("Test cases for the utils functions/module", () => {
       const returnValue = validateLocationObject(
         new UserLocationClass(789, 908)
       );
+
+      expect(returnValue.valid).toBe(true);
+    });
+  });
+  describe("Test cases for the 'validateAboutDescriptionObject' method", () => {
+    test("Should return invalid if a non array value passed to the 'data' parameter", async () => {
+      const objParamReturnValue = validateAboutDescriptionObject([] as any);
+      const intParamReturnValue = validateAboutDescriptionObject(90 as any);
+      const strParamReturnValue = validateAboutDescriptionObject(
+        "Hello" as any
+      );
+      const boolParamReturnValue = validateAboutDescriptionObject(true as any);
+
+      expect(objParamReturnValue.valid).toBe(false);
+      expect(objParamReturnValue.format()).toMatch(
+        /expected.*'data'.*object.*'array'/i
+      );
+      expect(intParamReturnValue.valid).toBe(false);
+      expect(intParamReturnValue.format()).toMatch(
+        /expected.*'data'.*object.*'number'/i
+      );
+      expect(strParamReturnValue.valid).toBe(false);
+      expect(strParamReturnValue.format()).toMatch(
+        /expected.*'data'.*object.*'string'/i
+      );
+      expect(boolParamReturnValue.valid).toBe(false);
+      expect(boolParamReturnValue.format()).toMatch(
+        /expected.*'data'.*object.*'boolean'/i
+      );
+    });
+    test("Should return invalid if an invalid schema is passed to the 'data' parameter", () => {
+      const returnValue1 = validateAboutDescriptionObject({ type: 890 } as any);
+      const returnValue2 = validateAboutDescriptionObject({ raw: 890 } as any);
+      const returnValue3 = validateAboutDescriptionObject({} as any);
+      const returnValue4 = validateAboutDescriptionObject({
+        kin: "908",
+      } as any);
+
+      expect(returnValue1.valid).toBe(false);
+      expect(returnValue2.valid).toBe(false);
+      expect(returnValue3.valid).toBe(false);
+      expect(returnValue4.valid).toBe(false);
+    });
+    test("Should return valid if an valid schema list is passed to the 'data' parameter", () => {
+      const returnValue = validateAboutDescriptionObject({ text: "", raw: "" });
 
       expect(returnValue.valid).toBe(true);
     });

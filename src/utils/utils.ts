@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { NextFunction, Request, Response } from "express";
-import { SocialMediaHandleType } from "../types";
+import { SocialMediaHandleType, UserAboutDescriptionType } from "../types";
 import inspector from "schema-inspector";
 import DataURIParser from "datauri/parser";
 import path from "path";
@@ -14,7 +14,8 @@ export class UserDetailsClass {
     public user_id?: string,
     public fullname?: string,
     public phone_number?: string,
-    public website?: string
+    public website?: string,
+    public about?: { text: string; raw: string }
   ) {}
 }
 
@@ -226,6 +227,45 @@ export const validateLocationObject = (
   };
 
   const result = inspector.validate(schema, location);
+
+  return result;
+};
+
+/**
+ * A function for validating the data passed to the update about description endpoint
+ * @param data An object matching the following schema - {text: string, raw: string}
+ * @returns an object containing result of the parameter passed has the valid schema, and the error/success message
+ */
+export const validateAboutDescriptionObject = (
+  data: UserAboutDescriptionType
+): { valid: boolean; format: Function } => {
+  // If the value passed into the data paremeter is not a valid object
+  if (typeof data !== "object")
+    return {
+      valid: false,
+      format: () =>
+        `Expected the parameter passed to the 'data' parameter to ba an object, but got a '${typeof data}' instead`,
+    };
+  if (Array.isArray(data))
+    return {
+      valid: false,
+      format: () =>
+        `Expected the parameter passed to the 'data' parameter to ba a object, but got an 'array' instead`,
+    };
+
+  const schema = {
+    type: "object",
+    properties: {
+      text: {
+        type: "string",
+      },
+      raw: {
+        type: "string",
+      },
+    },
+  };
+
+  const result = inspector.validate(schema, data);
 
   return result;
 };

@@ -21,14 +21,14 @@ jest.mock("axios");
 
 let testApiKey: string = convertTobase64(apiKey);
 const authData = {
-  user_ID: "650106e8961c0cbcc4d2f01f",
+  user_ID: "6516ee3643c5af4cc9631279",
   user_role: "orphanage",
 };
 const idParam = convertTobase64(authData.user_ID);
 let access_token: string;
 const dummyUserDetails = {
   ...new UserDetailsClass(
-    "650106e8961c0cbcc4d2f01f",
+    authData.user_ID,
     "Ayomide K. Daniel",
     "07070707070",
     "https://example.com"
@@ -72,7 +72,7 @@ afterAll(async () => {
   mongoose.disconnect();
 });
 
-describe("Test cases responsible for tesitng the edit account functionalty", () => {
+describe("Test cases responsible for tesitng the '/v1/:id' account functionalty", () => {
   test("Should return 401 error if no API key is passed", async () => {
     const res = await request(app).get(`/v1/${idParam}`);
 

@@ -38,6 +38,10 @@ const dummyUserDetails = new UserDetailsClass(
   "Prince C. Onukwili",
   "090909090"
 );
+const dummyUserAboutDescription = {
+  raw: `{blocks: [], entityMap:{}}`,
+  text: "",
+};
 const dummyUserLocation = {
   user_id: authData.user_ID,
   location: new UserLocationClass(4.789, 6.234),
@@ -772,7 +776,7 @@ describe("Test cases responsible for testing the '/v1/edit' endpoint", () => {
       expect(res.statusCode).toBe(401);
       expect(res.text).toMatch(/unauthorized/i);
     });
-    test("Should return 201 status code and create user details in database if it doesn't exist", async () => {
+    test("Should return 201 status code and create user image in database if it doesn't exist", async () => {
       (axios as any).post.mockResolvedValue({
         status: 200,
         data: {
@@ -797,7 +801,7 @@ describe("Test cases responsible for testing the '/v1/edit' endpoint", () => {
       expect(user?.phone_number).toEqual(undefined);
       expect(user?.image).toEqual(uploadFileToCloudinaryMockReturnValue.url);
     });
-    test("Should return 201 status code and update user details in database if it already exists", async () => {
+    test("Should return 201 status code and update user image in database if it already exists", async () => {
       (axios as any).post.mockResolvedValue({
         status: 200,
         data: {
@@ -826,6 +830,242 @@ describe("Test cases responsible for testing the '/v1/edit' endpoint", () => {
       expect(user?.fullname).toEqual(undefined);
       expect(user?.phone_number).toEqual(undefined);
       expect(user?.image).toEqual(uploadFileToCloudinaryMockReturnValue.url);
+    });
+  });
+  describe("Test cases responsible for tesitng the '/v1/edit/about' endpoint", () => {
+    test("Should return 401 error if no API key is passed", async () => {
+      const res = await request(app).patch("/v1/edit/about");
+
+      expect(res.statusCode).toBe(401);
+      expect(res.text).toMatch(/invalid.*api.*key/i);
+    });
+    test("Should return 401 error if invalid API key is passed", async () => {
+      const res = await request(app)
+        .patch("/v1/edit/about")
+        .set("Api-key", "nbhikm");
+
+      expect(res.statusCode).toBe(401);
+      expect(res.text).toMatch(/invalid.*api.*key/i);
+    });
+    test("Should return 401 error if no API access token is passed", async () => {
+      (axios as any).post.mockResolvedValue({
+        status: 401,
+        data: "Unauthorized",
+      });
+
+      const res = await request(app)
+        .patch("/v1/edit/about")
+        .set("Api-key", testApiKey);
+
+      expect(res.statusCode).toBe(401);
+      expect(res.text).toMatch(/unauthorized/i);
+    });
+    test("Should return 401 error if invalid API access token is passed (without 'Bearer')", async () => {
+      (axios as any).post.mockResolvedValue({
+        status: 401,
+        data: "Unauthorized",
+      });
+
+      const res = await request(app)
+        .patch("/v1/edit/about")
+        .set("Api-key", testApiKey)
+        .set("Authorization", "abc");
+
+      expect(res.statusCode).toBe(401);
+      expect(res.text).toMatch(/unauthorized/i);
+    });
+    test("Should return 401 error if invalid API access token is passed (with 'Bearer')", async () => {
+      (axios as any).post.mockResolvedValue({
+        status: 401,
+        data: "Unauthorized",
+      });
+
+      const res = await request(app)
+        .patch("/v1/edit/about")
+        .set("Api-key", testApiKey)
+        .set("Authorization", "Bearer abc");
+
+      expect(res.statusCode).toBe(401);
+      expect(res.text).toMatch(/unauthorized/i);
+    });
+    test("Should return 201 status code and create user about description in database if it doesn't exist", async () => {
+      (axios as any).post.mockResolvedValue({
+        status: 200,
+        data: {
+          user_ID: authData.user_ID,
+          user_role: authData.user_role,
+        },
+      });
+
+      const res = await request(app)
+        .patch("/v1/edit/about")
+        .set("Api-key", testApiKey)
+        .set("Authorization", `Bearer ${access_token}`)
+        .send(dummyUserAboutDescription);
+
+      const user = await UserDetailsModel.findOne({
+        user_id: authData.user_ID,
+      });
+
+      expect(res.statusCode).toBe(201);
+      expect(res.text).toMatch(/user.*updated.*successfully/i);
+      expect(user?.about?.raw).toEqual(dummyUserAboutDescription.raw);
+      expect(user?.about?.text).toEqual(dummyUserAboutDescription.text);
+    });
+    test("Should return 201 status code and update user about in database if it already exists", async () => {
+      (axios as any).post.mockResolvedValue({
+        status: 200,
+        data: {
+          user_ID: authData.user_ID,
+          user_role: authData.user_role,
+        },
+      });
+
+      await UserDetailsModel.create(
+        new UserDetailsClass(
+          "650106e8961c0cbcc4d2f01f",
+          "Test User",
+          "08080808080",
+          "https://image.com",
+          { raw: ``, text: "" }
+        )
+      );
+
+      const res = await request(app)
+        .patch("/v1/edit/about")
+        .set("Api-key", testApiKey)
+        .set("Authorization", `Bearer ${access_token}`)
+        .send(dummyUserAboutDescription);
+
+      const user = await UserDetailsModel.findOne({
+        user_id: authData.user_ID,
+      });
+
+      expect(res.statusCode).toBe(201);
+      expect(res.text).toMatch(/user.*updated.*successfully/i);
+      expect(user?.about?.raw).toEqual(dummyUserAboutDescription.raw);
+      expect(user?.about?.text).toEqual(dummyUserAboutDescription.text);
+    });
+  });
+  describe("Test cases responsible for tesitng the '/v1/edit/bg_image' endpoint", () => {
+    beforeEach(async () => {
+      // Reads the bg_image soc that it can be sent with the mock requests
+      imageBuffer = await readFile(
+        path.join(__dirname, "../go-charity-logo.png")
+      );
+    });
+
+    test("Should return 401 error if no API key is passed", async () => {
+      const res = await request(app).patch("/v1/edit/bg_image");
+
+      expect(res.statusCode).toBe(401);
+      expect(res.text).toMatch(/invalid.*api.*key/i);
+    });
+    test("Should return 401 error if invalid API key is passed", async () => {
+      const res = await request(app)
+        .patch("/v1/edit/bg_image")
+        .set("Api-key", "nbhikm");
+
+      expect(res.statusCode).toBe(401);
+      expect(res.text).toMatch(/invalid.*api.*key/i);
+    });
+    test("Should return 401 error if no API access token is passed", async () => {
+      (axios as any).post.mockResolvedValue({
+        status: 401,
+        data: "Unauthorized",
+      });
+
+      const res = await request(app)
+        .patch("/v1/edit/bg_image")
+        .set("Api-key", testApiKey);
+
+      expect(res.statusCode).toBe(401);
+      expect(res.text).toMatch(/unauthorized/i);
+    });
+    test("Should return 401 error if invalid API access token is passed (without 'Bearer')", async () => {
+      (axios as any).post.mockResolvedValue({
+        status: 401,
+        data: "Unauthorized",
+      });
+
+      const res = await request(app)
+        .patch("/v1/edit/bg_image")
+        .set("Api-key", testApiKey)
+        .set("Authorization", "abc");
+
+      expect(res.statusCode).toBe(401);
+      expect(res.text).toMatch(/unauthorized/i);
+    });
+    test("Should return 401 error if invalid API access token is passed (with 'Bearer')", async () => {
+      (axios as any).post.mockResolvedValue({
+        status: 401,
+        data: "Unauthorized",
+      });
+
+      const res = await request(app)
+        .patch("/v1/edit/bg_image")
+        .set("Api-key", testApiKey)
+        .set("Authorization", "Bearer abc");
+
+      expect(res.statusCode).toBe(401);
+      expect(res.text).toMatch(/unauthorized/i);
+    });
+    test("Should return 201 status code and create user cover image in database if it doesn't exist", async () => {
+      (axios as any).post.mockResolvedValue({
+        status: 200,
+        data: {
+          user_ID: authData.user_ID,
+          user_role: authData.user_role,
+        },
+      });
+
+      const res = await request(app)
+        .patch("/v1/edit/bg_image")
+        .set("Api-key", testApiKey)
+        .set("Authorization", `Bearer ${access_token}`)
+        .attach("image", imageBuffer, "go-charity-logo.png");
+
+      const user = await UserDetailsModel.findOne({
+        user_id: authData.user_ID,
+      });
+
+      expect(res.statusCode).toBe(201);
+      expect(res.text).toMatch(/user.*updated.*successfully/i);
+      expect(user?.metadata?.cover_image).toEqual(
+        uploadFileToCloudinaryMockReturnValue.url
+      );
+    });
+    test("Should return 201 status code and update user cover image in database if it already exists", async () => {
+      (axios as any).post.mockResolvedValue({
+        status: 200,
+        data: {
+          user_ID: authData.user_ID,
+          user_role: authData.user_role,
+        },
+      });
+
+      await UserDetailsModel.create({
+        user_id: authData.user_ID,
+        "metadata.cover_image": "https://kong.ng/picture.png",
+      });
+
+      const res = await request(app)
+        .patch("/v1/edit/bg_image")
+        .set("Api-key", testApiKey)
+        .set("Authorization", `Bearer ${access_token}`)
+        .attach("image", imageBuffer, "go-charity-logo.png");
+
+      const user = await UserDetailsModel.findOne({
+        user_id: authData.user_ID,
+      });
+
+      expect(res.statusCode).toBe(201);
+      expect(res.text).toMatch(/user.*updated.*successfully/i);
+      expect(user?.fullname).toEqual(undefined);
+      expect(user?.phone_number).toEqual(undefined);
+      expect(user?.metadata?.cover_image).toEqual(
+        uploadFileToCloudinaryMockReturnValue.url
+      );
     });
   });
 });

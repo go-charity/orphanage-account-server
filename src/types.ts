@@ -18,3 +18,5 @@ export type UserType = {
 };
 
 export type SocialMediaHandleType = { type: string; link: string };
+
+export type UserAboutDescriptionType = { text: string; raw: string };
