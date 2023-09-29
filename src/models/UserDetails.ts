@@ -14,6 +14,13 @@ const userDetails = new Schema({
   },
   image: String,
   website: String,
+  about: {
+    text: String,
+    raw: String,
+  },
+  metadata: {
+    cover_image: String,
+  },
 });
 
 const UserDetailsModel = model("User_Detail", userDetails);

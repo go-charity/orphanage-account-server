@@ -4,12 +4,14 @@ import {
   UserLocationClass,
   UserSocialMediaHandlesClass,
   uploadFileToCloudinary,
+  validateAboutDescriptionObject,
   validateLocationObject,
   validateSocialMediaHandlesList,
 } from "../utils/utils";
 import UserDetailsModel from "../models/UserDetails";
 import UserSocialMediaHandlesModel from "../models/UserSocialMediaHandles";
 import UserLocationModel from "../models/UserLocation";
+import { UserAboutDescriptionType } from "../types";
 
 export const editOrphanageDetails = async (
   req: Request<any, any, UserDetailsClass>,
@@ -366,6 +368,148 @@ export const editOrphanageImage = async (
     }
 
     return res.status(201).send("User image updated successfully");
+  } catch (error: any) {
+    return res.status(500).send(error.message);
+  }
+};
+export const editOrphanageAboutDescription = async (
+  req: Request<any, any, UserAboutDescriptionType>,
+  res: Response
+) => {
+  try {
+    // VALIDATE REQUEST BODY
+    const { body } = req;
+    const userID = req.headers.user_ID;
+    const result = validateAboutDescriptionObject(body);
+    if (!result.valid) {
+      throw new Error(`Invalid request body: ${result.format()}`);
+    }
+    // CHECK IF USER DETAILS EXIST
+    const userDetails = await UserDetailsModel.findOne({
+      user_id: userID,
+    }).catch((e) => {
+      throw new Error(
+        `Something went wrong while editing the user: ${e.message}`
+      );
+    });
+    // IF USER DETAILS DOESN'T EXIST
+    if (!userDetails) {
+      // CREATE THE USER DETAIL WITH THE ABOUT SECTION ONLY
+      const createdUser = await UserDetailsModel.create({
+        user_id: userID,
+        about: body,
+      }).catch((e) => {
+        throw new Error(
+          `Something went wrong while creating the user: ${e.message}`
+        );
+      });
+      if (!createdUser)
+        throw new Error(`Something went wrong while creating the user`);
+    }
+    // IF USER DETAILS EXISTS
+    else {
+      // UPDATE THE EXISTING DETAILS ABPUT SECTION
+      const updatedUser = await UserDetailsModel.updateOne(
+        {
+          user_id: userID,
+        },
+        { $set: { about: body } }
+      ).catch((e) => {
+        throw new Error(
+          `Something went wrong while updating the user: ${e.message}`
+        );
+      });
+      if (!updatedUser) {
+        throw new Error(`Something went wrong while updating the user`);
+      }
+    }
+    return res.status(201).send("User details updated successfully");
+  } catch (error: any) {
+    return res.status(500).send(error.message);
+  }
+};
+export const editOrphanageCoverImage = async (
+  req: Request<any, any, { image: string }>,
+  res: Response
+) => {
+  try {
+    const { body } = req;
+    // Delete the user_id properties from the request body
+    delete (body as any)?.user_id;
+    const userID = req.headers.user_ID;
+
+    // Validate the uploaded file
+    if (!req.file) {
+      return res.status(415).send("Upload a valid image");
+    }
+
+    // Search for the user details
+    const userDetails = await UserDetailsModel.findOne({
+      user_id: userID,
+    }).catch((e) => {
+      throw new Error(
+        `Something went wrong while editing the user cover image: ${e.message}`
+      );
+    });
+    // If the user details doesn't exist create a new user with ONLY the cover image property
+    if (!userDetails) {
+      // Upload cover image to cloudinary
+      const uploadedImage = await uploadFileToCloudinary(req.file, {
+        folder: "orphanage_profile_images",
+      }).catch((e) => {
+        throw new Error(
+          `Something went wrong: couldn't upload file to object storage due to: ${
+            e.message || e
+          }`
+        );
+      });
+
+      const createdUser = await UserDetailsModel.create({
+        user_id: userID,
+        "metadata.cover_image": uploadedImage.url,
+      }).catch((e) => {
+        throw new Error(
+          `Something went wrong while creating the user cover image: ${e.message}`
+        );
+      });
+      if (!createdUser)
+        throw new Error(
+          `Something went wrong while creating the user cover image`
+        );
+    }
+    // If user details exists update the cover image property of the existing user
+    else {
+      // Upload image to cloudinary
+      const uploadedImage = await uploadFileToCloudinary(req.file, {
+        folder: "orphanage_profile_images",
+      }).catch((e) => {
+        throw new Error(
+          `Something went wrong: couldn't upload file to object storage due to: ${
+            e.message || e
+          }`
+        );
+      });
+
+      // If the user details exist, update the existing user's cover image
+      const createdUser = await UserDetailsModel.updateOne(
+        { user_id: userID },
+        {
+          $set: {
+            "metadata.cover_image": uploadedImage.url,
+          },
+        }
+      ).catch((e) => {
+        throw new Error(
+          `Something went wrong while updating the user cover image: ${e.message}`
+        );
+      });
+      if (!createdUser)
+        throw new Error(
+          `Something went wrong while updating the user cover image: `
+        );
+    }
+
+    return res.status(201).send("User cover image updated successfully");
   } catch (error: any) {
     return res.status(500).send(error.message);
   }

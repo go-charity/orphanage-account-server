@@ -1,5 +1,7 @@
 import { Router } from "express";
 import {
+  editOrphanageAboutDescription,
+  editOrphanageCoverImage,
   editOrphanageDetails,
   editOrphanageImage,
   editOrphanageLocation,
@@ -13,6 +15,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 const editOrphanageRouter = Router();
 
 editOrphanageRouter.patch("/details", editOrphanageDetails);
+editOrphanageRouter.patch("/about", editOrphanageAboutDescription);
 editOrphanageRouter.put(
   "/social-media-handles",
   updateOrphanageSocialMediaHandles
@@ -23,5 +26,10 @@ editOrphanageRouter.patch(
 );
 editOrphanageRouter.patch("/location", editOrphanageLocation);
 editOrphanageRouter.patch("/image", upload.single("image"), editOrphanageImage);
+editOrphanageRouter.patch(
+  "/bg_image",
+  upload.single("image"),
+  editOrphanageCoverImage
+);
 
 export default editOrphanageRouter;
