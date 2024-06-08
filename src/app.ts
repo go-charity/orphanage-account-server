@@ -23,6 +23,7 @@ app.use(
       else throw new Error(`Origin '${origin}' not allowed`);
     },
     credentials: true,
+    exposedHeaders: ["is-user", "access-token", "refresh-token"],
   })
 );
 
@@ -31,8 +32,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Validate the API key being passed into the request
 app.use(validateApiKey);
-// Validate the access token passed into the request
-app.use(validateToken);
 
 app.use("/v1/", getOrphanageDetailsRouter);
 app.use("/v1/edit", editOrphanageRouter);

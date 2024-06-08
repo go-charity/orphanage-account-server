@@ -15,7 +15,8 @@ export class UserDetailsClass {
     public fullname?: string,
     public phone_number?: string,
     public website?: string,
-    public about?: { text: string; raw: string }
+    public about?: { text: string; raw: string },
+    public tagline?: string
   ) {}
 }
 
@@ -410,7 +411,7 @@ export const validateToken = async (
     next();
     return { code: 200, message: "authorized" };
   } catch (e: any) {
-    console.log("ERROR ", e);
+    console.log("ERROR ", e?.response?.data || e?.message || e);
     // TODO:
     res.status(401).json("Unauthorized");
     return { code: 401, message: `unauthorized from error, ${e.message}` };
@@ -418,6 +419,84 @@ export const validateToken = async (
   // TODO:
   res.status(401).json("Unauthorized");
   return { code: 401, message: `unauthorized from error` };
+};
+
+/**
+ * Validate if a request comes with a valid access token
+ * @example validateTokenWithoutError(request, response, next)
+ * @param req The express request object
+ * @param res The express response object
+ * @param next The express next function
+ * @returns an object containing response code and message
+ */
+export const validateTokenWithoutError = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<{ code: number; message: string }> => {
+  let response: AxiosResponse<any, any>;
+  req.headers.user_ID && delete req.headers.user_ID;
+  try {
+    response = await axios.post(
+      `${process.env.AUTH_SERVER_HOST}/v1/token/validate`,
+      undefined,
+      {
+        headers: {
+          ...(req.headers.authorization
+            ? { Authorization: req.headers.authorization }
+            : {}),
+          ...(req.headers["refresh-token"]
+            ? { ["Refresh-token"]: req.headers["refresh-token"] }
+            : {}),
+          Cookie:
+            req.headers.cookie ||
+            parseObjToString(req.cookies || {}, "=", "; "),
+          "Api-key": convertTobase64(process.env.AUTH_SERVER_API_KEY || ""),
+        },
+      }
+    );
+
+    // Return unauthorized if the response status code is neither 200 nor 201
+    if (response.status !== 200 && response.status !== 201) {
+      req.headers.user_ID && delete req.headers.user_ID;
+      next();
+      return { code: 401, message: `unauthorized from endpoint` };
+    }
+
+    // Set the user ID and user role in th request header
+    req.headers.user_ID = response.data.user_ID;
+    req.headers.user_role = response.data.user_role;
+
+    // Set the access and refresh tokens as cookies
+    response.data.tokens?.access_token &&
+      res.cookie("access_token", response.data.tokens.access_token, {
+        path: "/",
+        domain: process.env.API_DOMAIN,
+        httpOnly: false,
+        secure: true,
+      });
+    response.data.tokens?.refresh_token &&
+      res.cookie("refresh_token", response.data.tokens.refresh_token, {
+        path: "/",
+        domain: process.env.API_DOMAIN,
+        httpOnly: false,
+        secure: true,
+      });
+
+    // Set the access and refresh tokens as response headers
+    response.data.tokens?.access_token &&
+      res.setHeader("Access-token", response.data.tokens.access_token);
+    response.data.tokens?.refresh_token &&
+      res.setHeader("Refresh-token", response.data.tokens.refresh_token);
+
+    next();
+    return { code: 200, message: "authorized" };
+  } catch (e: any) {
+    console.log("ERROR ", e?.response?.data || e?.message || e);
+    req.headers.user_ID && delete req.headers.user_ID;
+    next();
+    return { code: 401, message: `unauthorized from error, ${e.message}` };
+  }
 };
 
 /**

@@ -9,10 +9,14 @@ import {
   updateOrphanageSocialMediaHandles,
 } from "../controllers/edit-orphanage-details";
 import multer from "multer";
+import { validateToken } from "../utils/utils";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 const editOrphanageRouter = Router();
+
+// Validate the access token passed into the request
+editOrphanageRouter.use(validateToken);
 
 editOrphanageRouter.patch("/details", editOrphanageDetails);
 editOrphanageRouter.patch("/about", editOrphanageAboutDescription);

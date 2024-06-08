@@ -9,6 +9,7 @@ const userDetails = new Schema({
   fullname: {
     type: String,
   },
+  tagline: String,
   phone_number: {
     type: String,
   },
