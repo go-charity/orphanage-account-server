@@ -10,8 +10,10 @@ import editOrphanageRouter from "./routes/edit-orphanage";
 config();
 connect();
 
+const parsed_origins: string = process.env.CLIENT_DOMAIN || "";
+
 const allowedOrigins = [
-  process.env.CLIENT_DOMAIN,
+  ...parsed_origins.split(","),
   process.env.CLIENT_AUTH_SUB_DOMAIN,
 ];
 
@@ -20,7 +22,12 @@ app.use(
   cors({
     origin: (origin, cb) => {
       if (allowedOrigins.includes(origin) || !origin) cb(null, true);
-      else throw new Error(`Origin '${origin}' not allowed`);
+      else
+        throw new Error(
+          `Origin '${origin}' not allowed. Allowed hosts: ${allowedOrigins.join(
+            ","
+          )}`
+        );
     },
     credentials: true,
     exposedHeaders: ["is-user", "access-token", "refresh-token"],
