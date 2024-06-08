@@ -11,16 +11,16 @@ import {
 import UserDetailsModel from "../models/UserDetails";
 import UserSocialMediaHandlesModel from "../models/UserSocialMediaHandles";
 import UserLocationModel from "../models/UserLocation";
-import { UserAboutDescriptionType } from "../types";
+import { UserAboutDescriptionType, UserDetailsType } from "../types";
 
 export const editOrphanageDetails = async (
-  req: Request<any, any, UserDetailsClass>,
+  req: Request<any, any, UserDetailsType>,
   res: Response
 ) => {
   try {
     const { body } = req;
     // Delete the user_id and image properties from the request body
-    delete body.user_id;
+    delete (body as any).user_id;
     delete (body as any).image;
     const userID = req.headers.user_ID;
 
@@ -37,6 +37,7 @@ export const editOrphanageDetails = async (
       const createdUser = await UserDetailsModel.create({
         user_id: userID,
         fullname: body.fullname,
+        tagline: body.tagline,
         phone_number: body.phone_number,
         website: body.website,
       }).catch((e) => {

@@ -1,6 +1,7 @@
 export type UserDetailsType = {
   user_id: string;
   fullname: string;
+  tagline: string;
   phone_number: string;
   website: string;
   image: string;

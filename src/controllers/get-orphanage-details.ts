@@ -16,9 +16,13 @@ export const getOrphanageDetails = async (
     // Get user details from the database
     const userDetails = await UserDetails.findOne({
       user_id: userID,
-    }).catch((_) => {
+    }).catch((err) => {
       // If error getting user
-      throw new Error("Something went wrong");
+      throw new Error(
+        `Something went wrong. Couldn't find user with ID: ${userID}, ${
+          err.message || err
+        }`
+      );
     });
     // If user doesn't exist
     if (!userDetails) return res.status(404).json("User doesn't exist");
@@ -29,10 +33,10 @@ export const getOrphanageDetails = async (
     // Get the user social media handles
     const userSocialMediaHandles = await UserSocialMediaHandlesModel.findOne({
       user_id: userID,
-    }).catch((_) => {
+    }).catch((err) => {
       // If error getting user
       throw new Error(
-        `Something went wrong while fetching the user's social media handles: ${_.message}`
+        `Something went wrong while fetching the user's social media handles: ${err.message}`
       );
     });
     // If the user social media handles were fetched successfully
@@ -46,10 +50,10 @@ export const getOrphanageDetails = async (
     // Get the user location
     const userLocation = await UserLocationModel.findOne({
       user_id: userID,
-    }).catch((_) => {
+    }).catch((err) => {
       // If error getting user
       throw new Error(
-        `Something went wrong while fetching the user's location: ${_.message}`
+        `Something went wrong while fetching the user's location: ${err.message}`
       );
     });
     // If the user social media handles were fetched successfully

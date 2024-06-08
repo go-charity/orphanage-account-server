@@ -16,6 +16,9 @@ const userLocation = new Schema({
         type: Number,
         required: true,
       },
+      metadata: {
+        address: String,
+      },
     },
     required: true,
   },
