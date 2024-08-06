@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orphanage-account-server-deployment
+  labels:
+    obj: deployment
+    app: orphanage-account-server
+spec:
+  selector:
+    matchLabels:
+      obj: pod
+      app: orphanage-account-server
+  replicas: 1
+  template:
+    metadata:
+      name: auth-server-pod
+      labels:
+        obj: pod
+        app: orphanage-account-server
+    spec:
+      containers:
+      - name: orphanage-account-server-container
+        image: gocharity/orphanage-account-server:v1
+        resources:
+          requests:
+            memory: 10Mi
+            cpu: 150m
+          limits:
+            memory: 20Mi
+            cpu: 250m
+        env:
+        - name: MONGODB_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: gocharity-config-map
+              key: MONGODB_PASSWORD
+        - name: MONGODB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: gocharity-config-map
+              key: MONGODB_USERNAME
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: gocharity-config-map
+              key: NODE_ENV
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: gocharity-config-map
+              key: PORT
+        - name: AUTH_SERVER_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: gocharity-config-map
+              key: AUTH_SERVER_HOST
+        - name: AUTH_SERVER_API_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: gocharity-config-map
+              key: AUTH_SERVER_API_KEY
+        - name: CLIENT_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: gocharity-config-map
+              key: CLIENT_DOMAIN
+        - name: MONGODB_LOCAL_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: gocharity-config-map
+              key: MONGODB_LOCAL_HOST
+        - name: MONGODB_DB
+          value: orphanage-account
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orphanage-account-server-service
+  labels:
+    obj: service
+    app: orphanage-account-server
+spec:
+  selector:
+    obj: pod
+    app: orphanage-account-server
+  ports:
+  - port: 6000
+    targetPort: 5000
+    protocol: "TCP"
+  type: LoadBalancer
