@@ -13,6 +13,7 @@
     "test": "jest",
     "coverage": "jest --coverage",
     "dev": "nodemon ./dev/index.js",
+    "debug": "nodemon ./src/index.ts",
     "start": "node ./dev/index.js"
   },
   "keywords": [

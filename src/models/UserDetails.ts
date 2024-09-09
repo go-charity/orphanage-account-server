@@ -22,6 +22,14 @@ const userDetails = new Schema({
   metadata: {
     cover_image: String,
   },
+  projects: {
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Project",
+      },
+    ],
+  },
 });
 
 const UserDetailsModel = model("User_Detail", userDetails);

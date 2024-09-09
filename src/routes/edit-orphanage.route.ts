@@ -7,7 +7,7 @@ import {
   editOrphanageLocation,
   editOrphanageSocialMediaHandles,
   updateOrphanageSocialMediaHandles,
-} from "../controllers/edit-orphanage-details";
+} from "../controllers/edit-orphanage-details.controller";
 import multer from "multer";
 import { validateToken } from "../utils/utils";
 

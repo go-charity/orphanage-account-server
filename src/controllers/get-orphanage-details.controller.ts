@@ -16,14 +16,16 @@ export const getOrphanageDetails = async (
     // Get user details from the database
     const userDetails = await UserDetails.findOne({
       user_id: userID,
-    }).catch((err) => {
-      // If error getting user
-      throw new Error(
-        `Something went wrong. Couldn't find user with ID: ${userID}, ${
-          err.message || err
-        }`
-      );
-    });
+    })
+      .populate({ path: "projects" })
+      .catch((err) => {
+        // If error getting user
+        throw new Error(
+          `Something went wrong. Couldn't find user with ID: ${userID}, ${
+            err.message || err
+          }`
+        );
+      });
     // If user doesn't exist
     if (!userDetails) return res.status(404).json("User doesn't exist");
     else {

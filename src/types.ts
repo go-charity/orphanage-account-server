@@ -1,3 +1,5 @@
+import { Schema } from "mongoose";
+
 export type UserDetailsType = {
   user_id: string;
   fullname: string;
@@ -21,3 +23,11 @@ export type UserType = {
 export type SocialMediaHandleType = { type: string; link: string };
 
 export type UserAboutDescriptionType = { text: string; raw: string };
+
+export type TProjectModel = {
+  user_id: Schema.Types.ObjectId;
+  images: string[];
+  name: string;
+  description: { text: string; raw: string };
+  goal: number;
+};
