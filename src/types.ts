@@ -20,7 +20,7 @@ export type UserType = {
   _id: string;
 };
 
-export type SocialMediaHandleType = { type: string; link: string };
+export type SocialMediaHandleType = { name: string; link: string };
 
 export type UserAboutDescriptionType = { text: string; raw: string };
 

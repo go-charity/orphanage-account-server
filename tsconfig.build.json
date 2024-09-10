@@ -3,4 +3,5 @@
   // 👇️ this may vary depending on how you
   // name your test files
   "exclude": ["src/__tests__/**/*"]
+  // "include": ["src/**/*", "module.d.ts"]
 }

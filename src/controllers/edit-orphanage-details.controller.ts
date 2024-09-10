@@ -75,7 +75,7 @@ export const updateOrphanageSocialMediaHandles = async (
   res: Response
 ) => {
   try {
-    // Validate the request body and check for duplicate 'type' properties in the social media handles list
+    // Validate the request body and check for duplicate 'name' properties in the social media handles list
     const { body } = req;
     const result = validateSocialMediaHandlesList(body);
     if (!result.valid)
@@ -113,7 +113,7 @@ export const updateOrphanageSocialMediaHandles = async (
     }
     // If user account exists
     else {
-      // TODO: Check for duplicate 'type' properties in a combined list consisting of the existing social media handles and handles to be added
+      // TODO: Check for duplicate 'name' properties in a combined list consisting of the existing social media handles and handles to be added
       const existingSocialmediaHandles =
         userSocialMediaHandles?.social_media_handles.map(
           (handle) => (handle as any)?._doc
@@ -157,6 +157,7 @@ export const updateOrphanageSocialMediaHandles = async (
       .status(201)
       .send("User social media handles updated successfully");
   } catch (error: any) {
+    console.error("Internal server error", error.message);
     return res.status(500).send(error.message);
   }
 };
@@ -197,7 +198,7 @@ export const editOrphanageSocialMediaHandles = async (
     // TODO: Loop through each social media handle in both the edited handles list and all existing handles (from the db), apply the changes made to each handle in the request handles to each handle in all the existing handles
     for (const socialMediaHandle of body) {
       const prevSocialMediaHandle = allSocialMediaHandles.find(
-        (handle) => handle.type === socialMediaHandle.type
+        (handle) => handle.name === socialMediaHandle.name
       );
       if (!prevSocialMediaHandle) continue;
       prevSocialMediaHandle.link = socialMediaHandle.link;
@@ -224,6 +225,7 @@ export const editOrphanageSocialMediaHandles = async (
       .status(200)
       .send("User social media handles updated successfully");
   } catch (error: any) {
+    console.error("Internal server error", error.message);
     return res.status(500).send(error.message);
   }
 };

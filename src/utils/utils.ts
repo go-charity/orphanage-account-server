@@ -25,7 +25,7 @@ export class UserLocationClass {
 }
 
 export class UserSocialMediaHandlesClass {
-  constructor(public type: string, public link: string) {}
+  constructor(public name: string, public link: string) {}
 }
 /**
  * Converts a utf-8 string to a base64 string
@@ -158,11 +158,11 @@ export const validateSocialMediaHandlesList = (
   const duplicateKeys: string[] = [];
   // Search for duplicate type properties in the social media handles list
   for (const handle of socialMediaHandles) {
-    if (typesSet.has(handle.type)) {
+    if (typesSet.has(handle.name)) {
       // TODO: append to duplicateKeys
-      duplicateKeys.push(handle.type);
+      duplicateKeys.push(handle.name);
     } else {
-      typesSet.add(handle.type);
+      typesSet.add(handle.name);
     }
   }
   // If the social media handles list has duplicate type properties
@@ -171,8 +171,8 @@ export const validateSocialMediaHandlesList = (
     return {
       valid: false,
       format: () =>
-        `The 'type' property is not unique, duplicates are ${duplicateKeys
-          .map((type) => `'${type}'`)
+        `The 'name' property is not unique, duplicates are ${duplicateKeys
+          .map((name) => `'${name}'`)
           .join(", ")}`,
     };
   }
@@ -182,7 +182,7 @@ export const validateSocialMediaHandlesList = (
     items: {
       type: "object",
       properties: {
-        type: { type: "string" },
+        name: { type: "string" },
         link: { type: "string" },
       },
     },
